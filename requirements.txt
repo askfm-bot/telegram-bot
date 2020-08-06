@@ -1,0 +1,7 @@
+beautifulsoup4
+dnspython
+emoji
+flask
+gunicorn
+pymongo
+pyTelegramBotApi
