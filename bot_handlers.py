@@ -75,7 +75,7 @@ def handle_subscribe_command(message):
         text = 'Вы уже подписаны на рассылку. Хотите отписаться??'
     else:
         subscribe = types.InlineKeyboardButton('Подписаться', callback_data='subscribe')
-        text = 'Подписаться на ежедневную рассылку новых постов Лапоки??'
+        text = 'Подпишитесь на рассылку и получайте уведомления о новых постах Лапочки, как только она их опубликует!'
 
     cancel = types.InlineKeyboardButton('Отмена', callback_data='subscribe_cancel')
     markup.add(subscribe, cancel)

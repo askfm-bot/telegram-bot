@@ -37,6 +37,24 @@ class LastPostsRepository():
         self.posts.update({ '_id': 0 }, { '$set': { 'time': time } })
 
 
+class PostsArchiveRepository():
+    def __init__(self):
+        client = pymongo.MongoClient(CONNECTION_STRING)
+        self.archive = client.main.posts_archive
+
+    def add_one(self, question):
+        self.archive.insert_one({
+            'title': question.title,
+            'time': question.time,
+            'who_asked': question.who_asked,
+            'answer': question.answer
+        })
+
+    def add_many(self, questions):
+        for question in questions:
+            self.add_one(question)
+
+
 class LogsRepository():
     def __init__(self):
         client = pymongo.MongoClient(CONNECTION_STRING)

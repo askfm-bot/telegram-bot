@@ -2,7 +2,7 @@ import time
 import random
 from datetime import datetime
 from bot_handlers import bot
-from repositories import SubscribersRepository, LastPostsRepository, LogsRepository
+from repositories import SubscribersRepository, LastPostsRepository, PostsArchiveRepository, LogsRepository
 from site_parser import get_questions
 
 
@@ -45,6 +45,9 @@ def send_notifications():
     if not new_questions:
         logs_repository.add(log)
         return
+
+    posts_archive_repository = PostsArchiveRepository()
+    posts_archive_repository.add_many(new_questions)
 
     last_posts_repository.update_last_post_time(new_questions[0].time)
     log['updated_last_date'] = new_questions[0].time
