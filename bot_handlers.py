@@ -3,7 +3,7 @@ from telebot import types
 from datetime import datetime
 from site_parser import get_questions
 from config import URL
-from repositories import SubscribersRepository, LogsRepository
+from repositories import SubscribersRepository, PostsArchiveRepository, LogsRepository
 import sticker_ids
 
 
@@ -15,7 +15,8 @@ def start_handler(message):
     bot.send_sticker(message.chat.id, sticker_ids.hello)
     bot.send_message(message.chat.id, 'Вас приветствует Томочка Лапочка!\n\n' + \
         '/top - получить несколько первых постов\n\n' + \
-        '/notifications - подписка на рассылку новых постов')
+        '/notifications - подписка на рассылку новых постов\n\n' + \
+        '/random - показать случайный пост')
 
     logs_repository.add({ 'source': 'User message', 'from_id': message.chat.id, 'command': message.text, 'time': datetime.now() })
 
@@ -100,6 +101,15 @@ def process_subscribe_command_callback(query):
     bot.send_sticker(query.message.chat.id, sticker_ids.done)
 
     logs_repository.add({ 'source': 'User message', 'from_id': query.message.chat.id, 'command': query.data, 'time': datetime.now() })
+
+
+@bot.message_handler(commands=['random'])
+def handle_random_command(message):
+    archive = PostsArchiveRepository()
+    question = archive.get_random()
+    bot.send_message(message.chat.id, question)
+
+    logs_repository.add({ 'source': 'User message', 'from_id': message.chat.id, 'command': message.text, 'time': datetime.now() })
 
 
 @bot.message_handler(content_types = ['text'])

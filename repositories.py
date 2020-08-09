@@ -1,6 +1,7 @@
 import pymongo
 from pymongo import MongoClient
 from config import CONNECTION_STRING
+from models import Question
 
 
 class SubscribersRepository():
@@ -53,6 +54,11 @@ class PostsArchiveRepository():
     def add_many(self, questions):
         for question in questions:
             self.add_one(question)
+
+    def get_random(self):
+        posts = self.archive.aggregate([{ '$sample': { 'size': 1 } }])
+        post = list(posts)[0]
+        return Question(post['title'], post['time'], None, post['who_asked'], post['answer'])
 
 
 class LogsRepository():
