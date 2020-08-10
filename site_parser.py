@@ -18,9 +18,25 @@ def get_questions(count=-1):
         time_tag = article.find('div', { 'class': 'streamItem_properties' }).find('time')
         time = datetime.strptime(time_tag['datetime'], '%Y-%m-%dT%H:%M:%S')
         time_relative = time_tag.contents[0]
-        who_asked = article.find('span', { 'class': 'author_username' })
-        who_asked = who_asked.contents[0] if who_asked else None
-        answer = '\n'.join([str(e).strip() for e in article.find('div', { 'class': 'streamItem_content' }).contents if str(e) and not str(e).startswith('<')])
-        questions.append(Question(title, time, time_relative, who_asked, answer))
+
+        try:
+            who_asked = article.find('span', { 'class': 'author_username' }).contents[0]
+        except:
+            who_asked = None
+
+        try:
+            answer = '\n'.join([str(e).strip() for e in article.find('div', { 'class': 'streamItem_content' }).contents if str(e) and not str(e).startswith('<')])
+        except:
+            try:
+                answer = article.find('div', { 'class': 'asnwerCard_text' }).contents[0]
+            except:
+                answer = None
+
+        try:
+            image_url = article.find('div', { 'class': 'streamItem_visual' }).find('a')['data-url']
+        except:
+            image_url = None
+
+        questions.append(Question(title, time, time_relative, who_asked, answer, image_url))
 
     return questions

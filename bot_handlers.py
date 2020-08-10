@@ -4,6 +4,7 @@ from datetime import datetime
 from site_parser import get_questions
 from config import URL
 from repositories import SubscribersRepository, PostsArchiveRepository, LogsRepository
+from shared_methods import send_question
 import sticker_ids
 
 
@@ -61,7 +62,7 @@ def process_top_command_callback(query):
         return
 
     for question in questions:
-        bot.send_message(query.message.chat.id, question)
+        send_question(bot, query.message.chat.id, question)
 
     logs_repository.add(log)
 
@@ -107,15 +108,15 @@ def process_subscribe_command_callback(query):
 def handle_random_command(message):
     archive = PostsArchiveRepository()
     question = archive.get_random()
-    bot.send_message(message.chat.id, question)
+    send_question(bot, message.chat.id, question)
 
     logs_repository.add({ 'source': 'User message', 'from_id': message.chat.id, 'command': message.text, 'time': datetime.now() })
 
 
-@bot.message_handler(content_types = ['text'])
+@bot.message_handler(content_types=['text'])
 def handle_text(message):
     if any(word in message.text.lower() for word in ['закружился', 'закружилась', 'кружусь', 'кружимся', 'кружится']):
-        send_zakruzhilas_gif(message.chat.id)
+        bot.send_animation(message.chat.id, open('files/zakruzhilas.mp4', 'rb'))
     else:
         bot.send_message(message.chat.id, 'Неподдерживаемая команда!!')
         bot.send_sticker(message.chat.id, sticker_ids.loh)
@@ -123,13 +124,9 @@ def handle_text(message):
     logs_repository.add({ 'source': 'User message', 'from_id': message.chat.id, 'text': message.text, 'time': datetime.now() })
 
 
-@bot.message_handler(content_types = ['sticker'])
+@bot.message_handler(content_types=['sticker'])
 def handle_sticker(message):
     bot.send_sticker(message.chat.id, sticker_ids.rachal)
-
-
-def send_zakruzhilas_gif(chat_id):
-    bot.send_animation(chat_id, open('files/zakruzhilas.mp4', 'rb'))
 
 
 if __name__ == '__main__':

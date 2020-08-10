@@ -4,6 +4,7 @@ from datetime import datetime
 from bot_handlers import bot
 from repositories import SubscribersRepository, LastPostsRepository, PostsArchiveRepository, LogsRepository
 from site_parser import get_questions
+from shared_methods import send_question
 
 
 def get_title_message(question_count):
@@ -64,7 +65,7 @@ def send_notifications():
             bot.send_message(user_id, get_title_message(len(new_questions)))
             sent_count += 1
             for question in new_questions:
-                bot.send_message(user_id, question)
+                send_question(bot, user_id, question)
                 sent_count += 1
         except:
             if sent_count == 0:

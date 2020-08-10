@@ -44,12 +44,16 @@ class PostsArchiveRepository():
         self.archive = client.main.posts_archive
 
     def add_one(self, question):
-        self.archive.insert_one({
-            'title': question.title,
-            'time': question.time,
-            'who_asked': question.who_asked,
-            'answer': question.answer
-        })
+        try:
+            self.archive.insert_one({
+                'title': question.title,
+                'time': question.time,
+                'who_asked': question.who_asked,
+                'answer': question.answer,
+                'image_url': question.image_url
+            })
+        except:
+            pass
 
     def add_many(self, questions):
         for question in questions:
@@ -58,7 +62,7 @@ class PostsArchiveRepository():
     def get_random(self):
         posts = self.archive.aggregate([{ '$sample': { 'size': 1 } }])
         post = list(posts)[0]
-        return Question(post['title'], post['time'], None, post['who_asked'], post['answer'])
+        return Question(post['title'], post['time'], None, post['who_asked'], post['answer'], post['image_url'])
 
 
 class LogsRepository():
