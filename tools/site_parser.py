@@ -1,12 +1,12 @@
 import requests
 from datetime import datetime
 from bs4 import BeautifulSoup
-from config import URL
+from config import URL_FEED
 from models import Question
 
 
 def get_questions(count=-1):
-    html = requests.get(URL)
+    html = requests.get(URL_FEED)
     root = BeautifulSoup(html.content, 'html.parser')
     articles = root.find_all('article')
     if (count >= 0):

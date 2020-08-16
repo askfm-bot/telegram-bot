@@ -10,3 +10,16 @@ def send_question(bot, chat_id, question):
         except:
             pass
 
+
+def get_user_names(chat):
+    try:
+        full_name = ' '.join([chat.first_name, chat.last_name])
+    except:
+        full_name = None
+
+    try:
+        username = chat.username
+    except:
+        username = None
+
+    return full_name, username

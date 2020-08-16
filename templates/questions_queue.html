@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+{% block title %}Questions queue{% endblock %}
+
+{% block page_body %}
+<ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+    <li class="nav-item">
+      <a class="nav-link active" id="pills-in-queue-tab" data-toggle="pill" href="#pills-in-queue" role="tab" aria-controls="pills-in-queue" aria-selected="true">In queue</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" id="pills-processed-tab" data-toggle="pill" href="#pills-processed" role="tab" aria-controls="pills-processed" aria-selected="false">Processed</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" id="pills-errors-tab" data-toggle="pill" href="#pills-errors" role="tab" aria-controls="pills-errors" aria-selected="false">Errors</a>
+    </li>
+</ul>
+<div class="tab-content" id="pills-tabContent">
+    <div class="tab-pane fade show active" id="pills-in-queue" role="tabpanel" aria-labelledby="pills-in-queue-tab">
+        {% if queue_info.unprocessed_list %}
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    {% if message == 'success' %}
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        Question has been successfully deleted!
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        <div class="table-responsive">
+            <table class="table table-hover table-sm tab-w">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col" class="col-w">Question</th>
+                        <th scope="col">Author</th>
+                        <th scope="col">Scheduled time</th>
+                        <th scope="col">Time left</th>
+                        <th scope="col"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in queue_info.unprocessed_list %}
+                    <tr>
+                        <th scope="row">{{loop.index}}</th>
+                        <td id="q_{{ item.id }}">{{ item.question }}</td>
+                        <td>{{ item.author }}</td>
+                        <td>{{ item.scheduled_time }}</td>
+                        <td>{{ item.time_left }}</td>
+                        <td>
+                            <form method="post" id="f_{{ item.id }}">
+                                <input type="hidden" name="id" value="{{ item.id }}" >
+                                <i class="fa fa-close submit" data-toggle="modal" data-target="#exampleModalCenter" onclick="confirm('{{ item.id }}')"></i>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <h4 class="text-secondary">Queue is empty</h4>
+        {% endif %}
+    </div>
+    <div class="tab-pane fade" id="pills-processed" role="tabpanel" aria-labelledby="pills-processed-tab">
+        {% if queue_info.sended_list %}
+        <div class="table-responsive">
+            <table class="table table-hover table-sm tab-w">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col" class="col-w">Question</th>
+                        <th scope="col">Author</th>
+                        <th scope="col">Sent time</th>
+                        <th scope="col"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in queue_info.sended_list %}
+                    <tr>
+                        <th scope="row">{{loop.index}}</th>
+                        <td>{{ item.question }}</td>
+                        <td>{{ item.author }}</td>
+                        <td>{{ item.sent_time }}</td>
+                        <td>
+                            {% if item.has_answer %}
+                            <i class="fa fa-check-circle yes-answer" aria-hidden="true"></i>
+                            {% else %}
+                            <i class="fa fa-circle-o no-answer" aria-hidden="true"></i>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <h4 class="text-secondary">No sent questions</h4>
+        {% endif %}
+    </div>
+    <div class="tab-pane fade" id="pills-errors" role="tabpanel" aria-labelledby="pills-errors-tab">
+        {% if queue_info.error_list %}
+        <div class="table-responsive">
+            <table class="table table-hover table-sm tab-w">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col" class="col-w">Question</th>
+                        <th scope="col">Author</th>
+                        <th scope="col">Scheduled time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in queue_info.error_list %}
+                    <tr>
+                        <th scope="row">{{loop.index}}</th>
+                        <td>{{ item.question }}</td>
+                        <td>{{ item.author }}</td>
+                        <td>{{ item.scheduled_time }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <h4 class="text-secondary">No errors</h4>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLongTitle">Confirm deletion</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="modal-body"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-danger" id="confirm-btn">Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block style %}
+<style>
+    .submit {
+        color: red;
+    }
+    .submit:hover {
+        color: darkred;
+        cursor: pointer;
+    }
+    .yes-answer {
+        color: green
+    }
+    .no-answer {
+        color: red
+    }
+    .tab-w {
+        width: 100%;
+    }
+    .col-w {
+        width: 55%;
+    }
+</style>
+{% endblock %}
+
+{% block script %}
+<script>
+    function confirm(id) {
+        question_text = $('#q_' + id).text()
+        $('#modal-body').html(question_text)
+        $('#confirm-btn').attr('onclick', "submit_form('" + id + "')");
+    }
+    function submit_form(form_id) {
+        $('#confirm-btn').append(' <i class="fa fa-spinner fa-spin"></i>')
+        $('#confirm-btn').prop('disabled', true);
+        $('#f_' + form_id).submit();
+    }
+</script>
+{% endblock %}

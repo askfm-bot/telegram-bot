@@ -2,9 +2,9 @@ import time
 import random
 from datetime import datetime
 from bot_handlers import bot
-from repositories import SubscribersRepository, LastPostsRepository, PostsArchiveRepository, LogsRepository
-from site_parser import get_questions
-from shared_methods import send_question
+from repositories import BotUsersRepository, LastPostsRepository, PostsArchiveRepository, QuestionQueueRepository, LogsRepository
+from tools.site_parser import get_questions
+from shared.methods import send_question
 
 
 def get_title_message(question_count):
@@ -50,28 +50,32 @@ def send_notifications():
     posts_archive_repository = PostsArchiveRepository()
     posts_archive_repository.add_many(new_questions)
 
+    questions_queue_repository = QuestionQueueRepository()
+    for question in new_questions:
+        if question.title:
+            questions_queue_repository.mark_as_answered(question.title.strip())
+
     last_posts_repository.update_last_post_time(new_questions[0].time)
     log['updated_last_date'] = new_questions[0].time
 
-    subscribers_repository = SubscribersRepository()
+    bot_user_repository = BotUsersRepository()
     log['subscriber_ids'] = []
     log['removed_from_subscribers'] = []
 
-    for user in subscribers_repository.get_all_users():
-        user_id = user['user_id']
-        log['subscriber_ids'].append(user_id)
+    for user in bot_user_repository.get_subscribed_to_notifications():
+        log['subscriber_ids'].append(user.id)
         sent_count = 0
         try:
-            bot.send_message(user_id, get_title_message(len(new_questions)))
+            bot.send_message(user.id, get_title_message(len(new_questions)))
             sent_count += 1
             for question in new_questions:
-                send_question(bot, user_id, question)
+                send_question(bot, user.id, question)
                 sent_count += 1
         except:
             if sent_count == 0:
-                subscribers_repository.delete_user(user_id)
-                log['removed_from_subscribers'].append(user_id)
-        time.sleep(15)
+                bot_user_repository.delete(user.id)
+                log['removed_from_subscribers'].append(user.id)
+        time.sleep(10)
 
     logs_repository.add(log)
 
