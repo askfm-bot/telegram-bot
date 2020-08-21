@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from repositories import QuestionQueueRepository
+from models import QuestionQueueItemStatus
 
 
 class QuestionsQueueInfo:
@@ -18,11 +19,11 @@ class UnprocessedQuestion:
     def map(question_queue_item):
         def strfdelta(tdelta, fmt):
             if tdelta < timedelta(0):
-                d = {"days": 0, "hours": 0, "minutes": 0}
+                d = { 'days': 0, 'hours': 0, 'minutes': 0 }
             else:
-                d = {"days": tdelta.days}
-                d["hours"], rem = divmod(tdelta.seconds, 3600)
-                d["minutes"], d["seconds"] = divmod(rem, 60)
+                d = { 'days': tdelta.days }
+                d['hours'], rem = divmod(tdelta.seconds, 3600)
+                d['minutes'], d['seconds'] = divmod(rem, 60)
             return fmt.format(**d)
 
         item = UnprocessedQuestion()
@@ -59,9 +60,9 @@ def get():
     question_queue_repository = QuestionQueueRepository()
     unprocessed_list = question_queue_repository.get_unprocessed()
     unprocessed_list.sort(key=lambda x: x.time_planned, reverse=False)
-    error_list = question_queue_repository.get_top_by_status(status=3, limit=20)
-    processed_list = question_queue_repository.get_top_by_status(status=1, limit=50)
-    manual_sended_list = question_queue_repository.get_top_by_status(status=4, limit=50)
+    error_list = question_queue_repository.get_top_by_status(QuestionQueueItemStatus.Error, limit=20)
+    processed_list = question_queue_repository.get_top_by_status(QuestionQueueItemStatus.Processed, limit=50)
+    manual_sended_list = question_queue_repository.get_top_by_status(QuestionQueueItemStatus.InstantlyInserted, limit=50)
     sended_list = [*processed_list, *manual_sended_list]
     sended_list.sort(key=lambda x: x.time_sended, reverse=True)
     return QuestionsQueueInfo(

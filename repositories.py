@@ -2,7 +2,7 @@ import pymongo
 from pymongo import MongoClient
 from bson.objectid import ObjectId
 from config import CONNECTION_STRING
-from models import BotUser, Question, QuestionQueueItem
+from models import BotUser, Question, QuestionQueueItem, QuestionQueueItemStatus
 
 
 class BotUsersRepository():
@@ -107,7 +107,7 @@ class QuestionQueueRepository():
             item['time_created'],
             item['time_planned'],
             item['time_sended'],
-            item['status'],
+            QuestionQueueItemStatus(item['status']),
             item['added_by_id'],
             item['added_by_name'],
             item['has_answer']
@@ -124,7 +124,7 @@ class QuestionQueueRepository():
             'time_created': question_queue_item.time_created,
             'time_planned': question_queue_item.time_planned,
             'time_sended': question_queue_item.time_sended,
-            'status': question_queue_item.status,
+            'status': int(question_queue_item.status),
             'added_by_id': question_queue_item.added_by_id,
             'added_by_name': question_queue_item.added_by_name,
             'has_answer': question_queue_item.has_answer
@@ -137,16 +137,16 @@ class QuestionQueueRepository():
         self.queue.delete_one({ '_id': ObjectId(id) })
 
     def get_unprocessed(self):
-        return self.__map(self.queue.find({ 'status': 0 }))
+        return self.__map(self.queue.find({ 'status': int(QuestionQueueItemStatus.Unprocessed) }))
 
     def get_top_by_status(self, status, limit):
-        return self.__map(self.queue.find({ 'status': status }).sort('time_planned', pymongo.DESCENDING).limit(limit))
+        return self.__map(self.queue.find({ 'status': int(status) }).sort('time_planned', pymongo.DESCENDING).limit(limit))
 
     def update(self, id, status, time_sended):
-        self.queue.update_one({'_id': id }, { '$set': { 'status': status, 'time_sended': time_sended } })
+        self.queue.update_one({'_id': id }, { '$set': { 'status': int(status), 'time_sended': time_sended } })
 
     def mark_as_answered(self, text):
-        self.queue.update_one({ '$and': [{'text': text }, { 'status': { '$in': [1, 4] } }] }, { '$set': { 'has_answer': True } })
+        self.queue.update_one({ '$and': [{'text': text }, { 'status': { '$in': [int(QuestionQueueItemStatus.Processed), int(QuestionQueueItemStatus.InstantlyInserted)] } }] }, { '$set': { 'has_answer': True } })
 
 
 class LogsRepository():

@@ -1,3 +1,4 @@
+from enum import IntEnum
 import emoji
 
 
@@ -26,13 +27,21 @@ class Question:
                f':bust_in_silhouette: КТО СПРОСИЛ\n{who_asked_str}\n\n:white_check_mark: ОТВЕТ{answer_str}', use_aliases=True)
 
 
+class QuestionQueueItemStatus(IntEnum):
+    Unprocessed = 0
+    Processed = 1
+    InProgress = 2
+    Error = 3
+    InstantlyInserted = 4
+
+
 class QuestionQueueItem:
     def __init__(self, text, time_created, time_planned, time_sended, status, added_by_id, added_by_name, has_answer):
         self.text = text
         self.time_created = time_created
         self.time_planned = time_planned
         self.time_sended = time_sended
-        self.status = status # 0 - Unprocessed, 1 - Processed, 2 - InProgress, 3 - Error, 4 - ManualInserted
+        self.status = status
         self.added_by_id = added_by_id
         self.added_by_name = added_by_name
         self.has_answer = has_answer

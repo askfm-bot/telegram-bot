@@ -9,13 +9,19 @@ def ask(question):
     chrome_options.add_argument('--no-sandbox')
     chrome_options.binary_location = GOOGLE_CHROME_PATH
 
-    browser = webdriver.Chrome(executable_path=CHROMEDRIVER_PATH, chrome_options=chrome_options)
-    browser.get(URL_ASK)
+    driver = webdriver.Chrome(executable_path=CHROMEDRIVER_PATH, chrome_options=chrome_options)
+    driver.get(URL_ASK)
 
-    text = browser.find_element_by_id('question_question_text')
-    text.send_keys(question)
+    JS_ADD_TEXT_TO_INPUT = """
+        var elm = arguments[0], txt = arguments[1];
+        elm.value += txt;
+        elm.dispatchEvent(new Event('change'));
+        """
 
-    for element in browser.find_elements_by_xpath("//*[contains(text(), 'I agree')]"):
-        browser.execute_script('arguments[0].click();', element)
+    text_input = driver.find_element_by_id('question_question_text')
+    driver.execute_script(JS_ADD_TEXT_TO_INPUT, text_input, question)
 
-    browser.find_element_by_id('questionsNewForm').submit()
+    for element in driver.find_elements_by_xpath("//*[contains(text(), 'I agree')]"):
+        driver.execute_script('arguments[0].click();', element)
+
+    driver.find_element_by_id('questionsNewForm').submit()

@@ -34,7 +34,7 @@
             <table class="table table-hover table-sm tab-w">
                 <thead>
                     <tr>
-                        <th scope="col">#</th>
+                        <th scope="col"></th>
                         <th scope="col" class="col-w">Question</th>
                         <th scope="col">Author</th>
                         <th scope="col">Scheduled time</th>
@@ -53,7 +53,7 @@
                         <td>
                             <form method="post" id="f_{{ item.id }}">
                                 <input type="hidden" name="id" value="{{ item.id }}" >
-                                <i class="fa fa-close submit" data-toggle="modal" data-target="#exampleModalCenter" onclick="confirm('{{ item.id }}')"></i>
+                                <i class="fa fa-close submit" data-toggle="modal" data-target="#delModel" onclick="confirm('{{ item.id }}')"></i>
                             </form>
                         </td>
                     </tr>
@@ -71,7 +71,7 @@
             <table class="table table-hover table-sm tab-w">
                 <thead>
                     <tr>
-                        <th scope="col">#</th>
+                        <th scope="col"></th>
                         <th scope="col" class="col-w">Question</th>
                         <th scope="col">Author</th>
                         <th scope="col">Sent time</th>
@@ -107,7 +107,7 @@
             <table class="table table-hover table-sm tab-w">
                 <thead>
                     <tr>
-                        <th scope="col">#</th>
+                        <th scope="col"></th>
                         <th scope="col" class="col-w">Question</th>
                         <th scope="col">Author</th>
                         <th scope="col">Scheduled time</th>
@@ -131,12 +131,12 @@
     </div>
 </div>
 
-<!-- Modal -->
-<div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+{# Modal #}
+<div class="modal fade" id="delModel" tabindex="-1" role="dialog" aria-labelledby="delModelTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLongTitle">Confirm deletion</h5>
+                <h5 class="modal-title" id="modelTitle">Confirm deletion</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
                 </button>

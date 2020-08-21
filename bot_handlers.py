@@ -3,10 +3,12 @@ from datetime import datetime, timedelta
 from bot import bot
 from telebot import types
 from config import URL_FEED
-from models import BotUser, QuestionQueueItem
+from models import BotUser, QuestionQueueItem, QuestionQueueItemStatus
 from repositories import BotUsersRepository, PostsArchiveRepository, QuestionQueueRepository, LogsRepository
 import tools.site_parser as site_parser
 import tools.question_asker as question_asker
+import tools.incoming_message_parser as message_parser
+from tools.incoming_message_parser import MessageType
 from shared.methods import send_question, get_user_names
 import sticker_ids
 
@@ -122,69 +124,92 @@ def handle_random_command(message):
 
 @bot.message_handler(content_types=['text'])
 def handle_text(message):
-    if message.text.startswith('-q'):
-        pattern = re.compile(r'^-q\s+(?P<datetime>\d\d\.\d\d\.\d\d\d\d\s+\d\d:\d\d)(?P<text>[\s\S]+)$')
-        match = pattern.match(message.text)
-        if match:
-            try:
-                planned_time_str = match.group('datetime')
-                time_planned = datetime.strptime(planned_time_str, '%d.%m.%Y %H:%M')
-                now = datetime.utcnow() + timedelta(hours=3)
-                if time_planned < now:
-                    now_str = now.strftime('%d.%m.%Y %H:%M')
-                    time_planned_str = time_planned.strftime('%d.%m.%Y %H:%M')
-                    bot.send_message(message.chat.id, f'Необходимо указать время из будущего! Время на сервере {now_str}, а вы указали {time_planned_str}.')
-                    return
-                text = match.group('text').strip()
-                confirm_message = f'Подтвердите, что хотите запланировать вопрос на {planned_time_str}:\n\n'
-                send = types.InlineKeyboardButton('Запланировать!!', callback_data='plan_question')
-            except:
-                bot.send_message(message.chat.id, 'Вы указали некорректное время!')
-                return
-        else:
-            text = message.text[2:].strip()
-            confirm_message = 'Подтвердите, что хотите задать вопрос прямо сейчас:\n\n'
-            send = types.InlineKeyboardButton('Задать!!', callback_data='send_question')
-        markup = types.InlineKeyboardMarkup(row_width=2)
-        cancel = types.InlineKeyboardButton('Отмена', callback_data='ask_cancel')
-        markup.add(send, cancel)
-        bot.send_message(message.chat.id, confirm_message + text, reply_markup=markup)
-        return
+    try:
+        parsing_result = message_parser.parse(message.text)
 
-    if any(word in message.text.lower() for word in ['закружился', 'закружилась', 'кружусь', 'кружимся', 'кружится']):
-        bot.send_animation(message.chat.id, open('files/zakruzhilas.mp4', 'rb'))
-    else:
-        bot.send_message(message.chat.id, 'Неподдерживаемая команда!!')
-        bot.send_sticker(message.chat.id, sticker_ids.loh)
+        if parsing_result.type == MessageType.UnsupportedCommand:
+            bot.send_message(message.chat.id, 'Неподдерживаемая команда!!')
+            bot.send_sticker(message.chat.id, sticker_ids.loh)
+            return
 
-    logs_repository.add({ 'source': 'User message', 'from_id': message.chat.id, 'text': message.text, 'time': datetime.utcnow() })
+        if parsing_result.type == MessageType.ZakruzhilasCommand:
+            bot.send_animation(message.chat.id, open('files/zakruzhilas.mp4', 'rb'))
+            return
+
+        if parsing_result.type == MessageType.InstantQuestion:
+            if parsing_result.is_valid:
+                markup = types.InlineKeyboardMarkup(row_width=2)
+                confirm_button = types.InlineKeyboardButton('Задать!!', callback_data='instant_question')
+                cancel_button = types.InlineKeyboardButton('Отмена', callback_data='instant_cancel')
+                markup.add(confirm_button, cancel_button)
+                text = 'Подтвердите, что хотите задать вопрос прямо сейчас:\n\n' + parsing_result.question
+                bot.send_message(message.chat.id, text, reply_markup=markup)
+            else:
+                bot.send_message(message.chat.id, parsing_result.comment)
+            return
+
+        if parsing_result.type == MessageType.ScheduledQuestion:
+            if parsing_result.is_valid:
+                markup = types.InlineKeyboardMarkup(row_width=2)
+                confirm_button = types.InlineKeyboardButton('Запланировать!!', callback_data='scheduled_question')
+                cancel_button = types.InlineKeyboardButton('Отмена', callback_data='scheduled_cancel')
+                markup.add(confirm_button, cancel_button)
+                text = f'Подтвердите, что хотите запланировать вопрос на {parsing_result.planned_time_str}:\n\n' + parsing_result.question
+                bot.send_message(message.chat.id, text, reply_markup=markup)
+            else:
+                bot.send_message(message.chat.id, parsing_result.comment)
+            return
+    finally:
+        logs_repository.add({ 'source': 'User message', 'from_id': message.chat.id, 'text': message.text, 'time': datetime.utcnow() })
 
 
-@bot.callback_query_handler(lambda query: query.data in ['send_question', 'plan_question', 'ask_cancel'])
+@bot.callback_query_handler(lambda query: query.data in ['instant_question', 'scheduled_question', 'instant_cancel', 'scheduled_cancel'])
 def process_ask_question_callback(query):
-    if query.data == 'ask_cancel':
+    if query.data in ['instant_cancel', 'scheduled_cancel']:
         bot.delete_message(query.message.chat.id, query.message.message_id)
         return
 
-    edited_text = 'Спрашиваем...' if query.data == 'send_question' else 'Планируем...'
+    edited_text = 'Спрашиваем...' if query.data == 'instant_question' else 'Планируем...'
     bot.edit_message_text(chat_id=query.message.chat.id, message_id=query.message.message_id, text=edited_text)
     message_parts = query.message.text.split('\n', maxsplit=1)
     text = message_parts[1].strip()
     full_name, username = get_user_names(query.message.chat)
     added_by_name = full_name if full_name else (username if username else query.message.chat.id)
+    now = datetime.utcnow()
 
-    if query.data == 'send_question':
+    if query.data == 'instant_question':
         try:
             question_asker.ask(text)
-            now =  datetime.utcnow()
-            questions_queue_repository.add(QuestionQueueItem(text, now, now, now, 4, query.message.chat.id, added_by_name, False))
+            questions_queue_repository.add(
+                QuestionQueueItem(
+                    text=text,
+                    time_created=now,
+                    time_planned=now,
+                    time_sended=now,
+                    status=QuestionQueueItemStatus.InstantlyInserted,
+                    added_by_id=query.message.chat.id,
+                    added_by_name=added_by_name,
+                    has_answer=False
+                )
+            )
         except:
             bot.edit_message_text(chat_id=query.message.chat.id, message_id=query.message.message_id, text='К сожалению, что-то сгнило!')
     else:
         regex = re.compile(r'^.+(?P<datetime>\d\d\.\d\d\.\d\d\d\d\s+\d\d\:\d\d):$')
         match = regex.match(message_parts[0])
         planned_time = datetime.strptime(match.group('datetime'), '%d.%m.%Y %H:%M') - timedelta(hours=3)
-        questions_queue_repository.add(QuestionQueueItem(text, datetime.utcnow(), planned_time, None, 0, query.message.chat.id, added_by_name, False))
+        questions_queue_repository.add(
+            QuestionQueueItem(
+                text=text,
+                time_created=now,
+                time_planned=planned_time,
+                time_sended=None,
+                status=QuestionQueueItemStatus.Unprocessed,
+                added_by_id=query.message.chat.id,
+                added_by_name=added_by_name,
+                has_answer=False
+            )
+        )
 
     bot.delete_message(query.message.chat.id, query.message.message_id)
     bot.send_sticker(query.message.chat.id, sticker_ids.done)
