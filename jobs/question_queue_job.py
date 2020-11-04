@@ -1,6 +1,7 @@
+import traceback
 from datetime import datetime, timedelta
 from repositories import QuestionQueueRepository, QuestionQueueItemStatus
-import tools.question_asker as question_asker
+from tools.question_asker import QuestionAsker
 
 
 def process():
@@ -19,10 +20,12 @@ def process():
             status = QuestionQueueItemStatus.Error
         else:
             try:
-                question_asker.ask(question.text)
+                QuestionAsker.ask(question.text)
                 status = QuestionQueueItemStatus.Processed
-            except:
+            except Exception as ex:
                 status = QuestionQueueItemStatus.Error
+                error = ''.join(traceback.format_exception(etype=type(ex), value=ex, tb=ex.__traceback__))
+                repository.add_additional_data(question.id, error)
 
         repository.update(question.id, status, utc_now)
 

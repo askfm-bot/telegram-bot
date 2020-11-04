@@ -148,6 +148,9 @@ class QuestionQueueRepository():
     def mark_as_answered(self, text):
         self.queue.update_one({ '$and': [{'text': text }, { 'status': { '$in': [int(QuestionQueueItemStatus.Processed), int(QuestionQueueItemStatus.InstantlyInserted)] } }] }, { '$set': { 'has_answer': True } })
 
+    def add_additional_data(self, id, data):
+        self.queue.update_one({ '_id': id }, { '$set': { 'additional_data': data } })
+
 
 class LogsRepository():
     def __init__(self):

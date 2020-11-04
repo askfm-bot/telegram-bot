@@ -3,7 +3,7 @@ import random
 from datetime import datetime
 from bot_handlers import bot
 from repositories import BotUsersRepository, LastPostsRepository, PostsArchiveRepository, QuestionQueueRepository, LogsRepository
-from tools.site_parser import get_questions
+from tools.site_parser import SiteParser
 from shared.methods import send_question
 
 
@@ -13,14 +13,16 @@ def get_title_message(question_count):
     part2 = random.choice(['снизошла', 'удосужилась', 'умудрилась', 'решила', 'соизволила', 'не постеснялась', 'нашла время, чтобы', \
         'посчитала нужным', 'отвлеклась от важной работы, чтобы', 'выкроила минутку в своём плотном расписании, чтобы', 'улучила минутку, чтобы'])
 
+    part3 = random.choice(['аж ', ''])
+
     if (question_count % 10 == 1) and (question_count % 100 != 11):
-        part3 = 'новый вопрос'
+        part4 = 'новый вопрос'
     elif (question_count % 10 in [2, 3, 4]) and (question_count % 100 not in [12, 13, 14]):
-        part3 = 'новых вопроса'
+        part4 = 'новых вопроса'
     else:
-        part3 = 'новых вопросов'
- 
-    return f'{part1} {part2} ответить на {question_count} {part3}:'
+        part4 = 'новых вопросов'
+
+    return f'{part1} {part2} ответить {part3}на {question_count} {part4}:'
 
 
 def send_notifications():
@@ -28,7 +30,7 @@ def send_notifications():
     log = { 'source': 'Mailing Job', 'time': datetime.now() }
 
     try:
-        questions = get_questions()
+        questions = SiteParser.parse()
         log['parsing_result'] = 'successfully'
         log['parsed_questions_count'] = len(questions)
     except:

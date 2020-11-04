@@ -5,11 +5,11 @@ from telebot import types
 from config import URL_FEED
 from models import BotUser, QuestionQueueItem, QuestionQueueItemStatus
 from repositories import BotUsersRepository, PostsArchiveRepository, QuestionQueueRepository, LogsRepository
-import tools.site_parser as site_parser
-import tools.question_asker as question_asker
-import tools.incoming_message_parser as message_parser
-from tools.incoming_message_parser import MessageType
+from tools.question_asker import QuestionAsker
+from tools.site_parser import SiteParser
+from tools.incoming_message_parser import IncomingMessageParser, MessageType
 from shared.methods import send_question, get_user_names
+from validators.validation_decorator import validate_user
 import sticker_ids
 
 
@@ -20,6 +20,7 @@ logs_repository = LogsRepository()
 
 
 @bot.message_handler(commands=['start'])
+@validate_user
 def start_handler(message):
     bot.send_sticker(message.chat.id, sticker_ids.hello)
     bot.send_message(message.chat.id, 'Вас приветствует Томочка Лапочка!\n\n' + \
@@ -34,6 +35,7 @@ def start_handler(message):
 
 
 @bot.message_handler(commands=['top'])
+@validate_user
 def handle_top_command(message):
     markup = types.InlineKeyboardMarkup(row_width=2)
     top1 = types.InlineKeyboardButton('Top 1', callback_data='top1')
@@ -64,7 +66,7 @@ def process_top_command_callback(query):
     bot.send_message(query.message.chat.id, f'Top {count} записей:')
     
     try:
-        questions = site_parser.get_questions(count)
+        questions = SiteParser.parse(count)
     except:
         bot.send_message(query.message.chat.id, f'К сожалению, что-то сгнило! Попробуйте еще раз позже или посетите сайт царицы {URL_FEED}.')
         bot.send_sticker(query.message.chat.id, sticker_ids.no_mood)
@@ -79,6 +81,7 @@ def process_top_command_callback(query):
 
 
 @bot.message_handler(commands=['notifications'])
+@validate_user
 def handle_subscribe_command(message):
     markup = types.InlineKeyboardMarkup(row_width=2)
     user = bot_users_repository.get_by_id(message.from_user.id)
@@ -115,6 +118,7 @@ def process_subscribe_command_callback(query):
 
 
 @bot.message_handler(commands=['random'])
+@validate_user
 def handle_random_command(message):
     question = posts_archive_repository.get_random()
     send_question(bot, message.chat.id, question)
@@ -123,9 +127,10 @@ def handle_random_command(message):
 
 
 @bot.message_handler(content_types=['text'])
+@validate_user
 def handle_text(message):
     try:
-        parsing_result = message_parser.parse(message.text)
+        parsing_result = IncomingMessageParser.parse(message.text)
 
         if parsing_result.type == MessageType.UnsupportedCommand:
             bot.send_message(message.chat.id, 'Неподдерживаемая команда!!')
@@ -179,7 +184,7 @@ def process_ask_question_callback(query):
 
     if query.data == 'instant_question':
         try:
-            question_asker.ask(text)
+            QuestionAsker.ask(text)
             questions_queue_repository.add(
                 QuestionQueueItem(
                     text=text,
@@ -216,6 +221,7 @@ def process_ask_question_callback(query):
 
 
 @bot.message_handler(content_types=['sticker'])
+@validate_user
 def handle_sticker(message):
     bot.send_sticker(message.chat.id, sticker_ids.rachal)
 

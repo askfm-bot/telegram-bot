@@ -1,13 +1,14 @@
 import os
 
 
-TOKEN = os.environ['TOKEN']
-APP_NAME = os.environ['APP_NAME']
-URL_FEED = 'https://ask.fm/' + os.environ['ASKFM_USERNAME']
-URL_ASK = 'https://ask.fm/' + os.environ['ASKFM_USERNAME'] + '/ask'
-CONNECTION_STRING = os.environ['CONNECTION_STRING']
-ADMIN_USERNAME = os.environ['ADMIN_USERNAME']
 ADMIN_PASSWORD = os.environ['ADMIN_PASSWORD']
-SECRET = os.environ['SECRET']
-GOOGLE_CHROME_PATH = os.environ['GOOGLE_CHROME_BIN']
+ADMIN_USERNAME = os.environ['ADMIN_USERNAME']
+ALLOWED_USER_IDS = list(map(int, os.environ['ALLOWED_USER_IDS'].split(',')))
+APP_NAME = os.environ['APP_NAME']
 CHROMEDRIVER_PATH = os.environ['CHROMEDRIVER_PATH']
+CONNECTION_STRING = os.environ['CONNECTION_STRING']
+GOOGLE_CHROME_PATH = os.environ['GOOGLE_CHROME_BIN']
+SECRET = os.environ['SECRET']
+TOKEN = os.environ['TOKEN']
+URL_ASK = 'https://ask.fm/' + os.environ['ASKFM_USERNAME'] + '/ask'
+URL_FEED = 'https://ask.fm/' + os.environ['ASKFM_USERNAME']
