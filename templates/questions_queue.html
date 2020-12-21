@@ -10,10 +10,15 @@
       <a class="nav-link" id="pills-processed-tab" data-toggle="pill" href="#pills-processed" role="tab" aria-controls="pills-processed" aria-selected="false">Processed</a>
     </li>
     <li class="nav-item">
+      <a class="nav-link" id="pills-unanswered-tab" data-toggle="pill" href="#pills-unanswered" role="tab" aria-controls="pills-unanswered" aria-selected="false">Unanswered</a>
+    </li>
+    <li class="nav-item">
       <a class="nav-link" id="pills-errors-tab" data-toggle="pill" href="#pills-errors" role="tab" aria-controls="pills-errors" aria-selected="false">Errors</a>
     </li>
 </ul>
 <div class="tab-content" id="pills-tabContent">
+
+    {# Unprocessed #}
     <div class="tab-pane fade show active" id="pills-in-queue" role="tabpanel" aria-labelledby="pills-in-queue-tab">
         {% if queue_info.unprocessed_list %}
         {% with messages = get_flashed_messages() %}
@@ -65,8 +70,10 @@
         <h4 class="text-secondary">Queue is empty</h4>
         {% endif %}
     </div>
+
+    {# Processed #}
     <div class="tab-pane fade" id="pills-processed" role="tabpanel" aria-labelledby="pills-processed-tab">
-        {% if queue_info.sended_list %}
+        {% if queue_info.sent_list %}
         <div class="table-responsive">
             <table class="table table-hover table-sm tab-w">
                 <thead>
@@ -79,7 +86,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for item in queue_info.sended_list %}
+                    {% for item in queue_info.sent_list %}
                     <tr>
                         <th scope="row">{{loop.index}}</th>
                         <td>{{ item.question }}</td>
@@ -101,6 +108,38 @@
         <h4 class="text-secondary">No sent questions</h4>
         {% endif %}
     </div>
+
+    {# Unanswered #}
+    <div class="tab-pane fade" id="pills-unanswered" role="tabpanel" aria-labelledby="pills-unanswered-tab">
+        {% if queue_info.unanswered_list %}
+        <div class="table-responsive">
+            <table class="table table-hover table-sm tab-w">
+                <thead>
+                    <tr>
+                        <th scope="col"></th>
+                        <th scope="col" class="col-w">Question</th>
+                        <th scope="col">Author</th>
+                        <th scope="col">Sent time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in queue_info.unanswered_list %}
+                    <tr>
+                        <th scope="row">{{loop.index}}</th>
+                        <td>{{ item.question }}</td>
+                        <td>{{ item.author }}</td>
+                        <td>{{ item.sent_time }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <h4 class="text-secondary">No unanswered questions</h4>
+        {% endif %}
+    </div>
+
+    {# Errors #}
     <div class="tab-pane fade" id="pills-errors" role="tabpanel" aria-labelledby="pills-errors-tab">
         {% if queue_info.error_list %}
         <div class="table-responsive">

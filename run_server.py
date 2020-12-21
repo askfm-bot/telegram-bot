@@ -2,14 +2,16 @@ import flask
 from flask import request, redirect, flash
 from flask_simplelogin import SimpleLogin, login_required, url_for
 import os
-import time
 from telebot import types
 import config
 from bot_handlers import bot
-import data_providers.bot_users_provider as bot_users_provider
-import data_providers.mailing_job_report_provider as mailing_job_report_provider
-import data_providers.questions_queue_info_provider as questions_queue_info_provider
-import questions_queue_manager
+from data_providers.bot_users_provider import BotUsersProvider
+from data_providers.question_count_report_provider import QuestionCountReportProvider
+from data_providers.questions_queue_info_provider import QuestionQueueInfoProvider
+from tools.questions_queue_item_deleter import QuestionQueueItemDeleter
+from repositories.bot_users_repository import BotUsersRepository
+from repositories.question_queue_repository import QuestionQueueRepository
+from repositories.post_archive_repository import PostsArchiveRepository
 
 
 server = flask.Flask(__name__, template_folder='templates')
@@ -42,7 +44,8 @@ def admin():
 @server.route('/admin/user-information', methods=['GET'])
 @login_required
 def admin_user_information():
-    users = bot_users_provider.get()
+    provider = BotUsersProvider(BotUsersRepository())
+    users = provider.get()
     return flask.render_template('user_information.html', users=users)
 
 
@@ -60,7 +63,8 @@ def admin_send_message():
         flash('success')
         return redirect(url_for('admin_send_message'))
 
-    users = bot_users_provider.get()
+    provider = BotUsersProvider(BotUsersRepository())
+    users = provider.get()
     return flask.render_template('send_message.html', users=users)
 
 
@@ -68,19 +72,22 @@ def admin_send_message():
 @login_required
 def admin_questions_queue():
     if request.method == 'POST':
-        questions_queue_manager.delete(request.form['id'])
+        question_deleter = QuestionQueueItemDeleter(QuestionQueueRepository())
+        question_deleter.delete(request.form['id'])
         flash('success')
         return redirect(url_for('admin_questions_queue'))
 
-    queue_info = questions_queue_info_provider.get()
+    provider = QuestionQueueInfoProvider(QuestionQueueRepository())
+    queue_info = provider.get()
     return flask.render_template('questions_queue.html', queue_info=queue_info)
 
 
 @server.route('/admin/statistic', methods=['GET'])
 @login_required
 def admin_post_statistics():
-    items = mailing_job_report_provider.get()
-    return flask.render_template('post_statistics.html', items=items)
+    provider = QuestionCountReportProvider(PostsArchiveRepository())
+    data = provider.get()
+    return flask.render_template('post_statistics.html', data=data)
 
 
 if __name__ == '__main__':

@@ -4,6 +4,8 @@ emoji
 flask
 flask_simplelogin
 gunicorn
+matplotlib
 pymongo
-pyTelegramBotApi
+pyTelegramBotApi == 3.7.2
 selenium
+vk

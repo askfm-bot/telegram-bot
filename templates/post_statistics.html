@@ -6,37 +6,33 @@
 <div class="table-responsive">
     <table class="table table-bordered table-hover table-sm">
         <tr>
-            <th scope="col" rowspan="2">Mailing time (UTC+3)</th>
-            <th scope="col" colspan="6">Total answers count</th>
+            <th scope="col">Period</th>
+            <th scope="col">Total answers count</th>
         </tr>
         <tr>
-            <th scope="col">All time</th>
-            <th scope="col">Last year</th>
-            <th scope="col">Last 3 months</th>
-            <th scope="col">Last month</th>
-            <th scope="col">Last week</th>
-            <th scope="col">Last 24 hours</th>
+            <th scope="row">All time</th>
+            <td>{{ data.all_period }}</td>
         </tr>
-        {% for item in items %}
         <tr>
-            <th scope="row">{{ item.time }}</th>
-            {% if not loop.last %}
-            <td>{{ item.all_period }}</td>
-            <td>{{ item.last_year }}</td>
-            <td>{{ item.last_3month }}</td>
-            <td>{{ item.last_month }}</td>
-            <td>{{ item.last_week }}</td>
-            <td>{{ item.last_day }}</td>
-            {% else %}
-            <th>{{ item.all_period }}</th>
-            <th>{{ item.last_year }}</th>
-            <th>{{ item.last_3month }}</th>
-            <th>{{ item.last_month }}</th>
-            <th>{{ item.last_week }}</th>
-            <th>{{ item.last_day }}</th>
-            {% endif %}
+            <th scope="row">Last year</th>
+            <td>{{ data.last_year }}</td>
         </tr>
-        {% endfor %}
+        <tr>
+            <th scope="row">Last 3 months</th>
+            <td>{{ data.last_3_months }}</td>
+        </tr>
+        <tr>
+            <th scope="row">Last month</th>
+            <td>{{ data.last_month }}</td>
+        </tr>
+        <tr>
+            <th scope="row">Last week</th>
+            <td>{{ data.last_week }}</td>
+        </tr>
+        <tr>
+            <th scope="row">Last 24 hours</th>
+            <td>{{ data.last_day }}</td>
+        </tr>
     </table>
 </div>
 {% endblock %}

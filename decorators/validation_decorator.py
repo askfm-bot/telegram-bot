@@ -2,6 +2,7 @@ from functools import wraps
 from config import ALLOWED_USER_IDS
 from bot import bot
 
+
 def validate_user(fn):
     @wraps(fn)
     def wrapped(*args, **kwargs):

@@ -1,9 +1,10 @@
 from selenium import webdriver
 from config import URL_ASK, GOOGLE_CHROME_PATH, CHROMEDRIVER_PATH
 
+
 class QuestionAsker:
     @staticmethod
-    def ask(question):
+    def ask(question: str) -> None:
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_argument('--headless')
         chrome_options.add_argument('--disable-dev-shm-usage')
